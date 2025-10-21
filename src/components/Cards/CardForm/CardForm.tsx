@@ -782,14 +782,6 @@ function CardForm({ uuid }: CardFormProps) {
             label="Title"
             fullWidth
           />
-
-          <Input
-            id="suffix"
-            value={card.suffix || ''}
-            onChange={(e) => handleChangeCard('suffix', e.target.value)}
-            label="Suffix"
-            fullWidth
-          />
         </div>
       </div>
 

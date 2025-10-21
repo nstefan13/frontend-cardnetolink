@@ -1,0 +1,10 @@
+@import '@/styles/variables.scss';
+
+.paper-component {
+  border: 1px solid $neutral-400;
+  box-shadow: 0 8px 24px #a59d9533;
+  border-radius: $medium-radius;
+  background-color: #ffffff;
+  max-width: 484px;
+  width: 100%;
+}

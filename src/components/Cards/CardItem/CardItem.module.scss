@@ -1,0 +1,93 @@
+@import '@/styles/variables.scss';
+
+.card-item {
+  position: relative;
+  background-color: #ffffff;
+  border: 1px solid $neutral-300;
+  border-radius: 6px;
+  width: 100%;
+  text-align: center;
+
+  &-remove {
+    position: absolute;
+    top: 10px;
+    right: 5px;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  &-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 19px 30px 19px;
+    gap: 16px;
+
+    &-image {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      overflow: hidden;
+
+      img {
+        object-fit: cover;
+      }
+    }
+
+    &-info {
+      display: block;
+      line-height: 1.2;
+
+      &-name {
+        font-size: 32px;
+        font-weight: 700;
+        color: $base-black;
+      }
+
+      &-title {
+        font-size: 18px;
+        font-weight: 400;
+        color: $base-black;
+      }
+    }
+  }
+
+  &-actions {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    border-top: 1px solid $neutral-300;
+
+    button {
+      flex: 1;
+      border-bottom: none;
+      padding: 8px 0px 8px 0px;
+
+      &:hover {
+        cursor: pointer;
+      }
+    }
+
+    &-edit {
+      background-color: #ffffff;
+      color: $base-black;
+      border-radius: 0 0 0 5px !important;
+      border-left: none;
+      border-right: 1px solid $neutral-800;
+      font-family: inherit;
+      font-weight: 300;
+      font-size: 18px;
+    }
+
+    &-share {
+      background-color: #ffffff;
+      color: $base-black;
+      border-radius: 0 0 5px 0 !important;
+      border-right: none;
+      border-left: none;
+      font-family: inherit;
+      font-weight: 300;
+      font-size: 18px;
+    }
+  }
+}

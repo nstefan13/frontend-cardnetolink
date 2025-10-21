@@ -1,0 +1,28 @@
+@import '@/styles/variables.scss';
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 11px 24px 11px 24px;
+  border-radius: $medium-radius;
+  background-color: rgba(245, 245, 245);
+  border: 1px solid $base-white;
+  text-align: center;
+  align-items: center;
+  max-width: 484px;
+  width: 100%;
+  margin-bottom: 30px;
+  z-index: 10;
+
+  &-text {
+    font-size: 24px;
+    font-weight: 300;
+    color: $base-black;
+  }
+
+  &-logo {
+    &:hover {
+      cursor: pointer;
+    }
+  }
+}

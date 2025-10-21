@@ -13,6 +13,7 @@ import Select from '@/components/reusables/Select/Select';
 
 import { EmailTypeEnum } from '@/enums/emailTypeEnum';
 import { PhoneTypeEnum } from '@/enums/phoneTypeEnum';
+import { TitleTypeEnum } from '@/enums/titleTypeEnum';
 import { WebsiteTypeEnum } from '@/enums/websiteTypeEnum';
 import { AddressTypeEnum } from '@/enums/addressTypeEnum';
 import { Card, CardEmail, CardPhone, CardWebsite, CardAddress } from '@/types/cardTypes';
@@ -118,6 +119,11 @@ const addressTypeOptions = Object.entries(AddressTypeEnum).map(([key, value]) =>
   label: key,
   value
 }));
+
+const titleOptions = Object.entries(TitleTypeEnum).map(([key, value]) => ({
+  label: value,
+  value: value,
+}))
 
 // Utility to deeply trim all string fields in the card object
 function deepTrimCard(card: Card): Card {
@@ -758,13 +764,25 @@ function CardForm({ uuid }: CardFormProps) {
           <label>Personal</label>
         </div>
 
-        <Input
-          id="first-name"
-          type="text"
-          value={card.firstName || ''}
-          onChange={(e) => handleChangeCard('firstName', e.target.value)}
-          label="First Name"
-        />
+        <div className={styles[`${c}__section-title`]}>
+          <Select
+            className={styles[`${c}__section-prefix`]}
+            placeholder="Title"
+            options={titleOptions}
+            defaultValue={titleOptions.find((option) => option.value === card.title)}
+            onChange={(option) => handleChangeCard('title', (option as any).value)}
+          />
+          
+          <Input
+            fullWidth
+            id="first-name"
+            type="text"
+            value={card.firstName || ''}
+            onChange={(e) => handleChangeCard('firstName', e.target.value)}
+            label="First Name"
+          />
+        </div>
+
 
         <Input
           id="last-name"
@@ -773,16 +791,6 @@ function CardForm({ uuid }: CardFormProps) {
           onChange={(e) => handleChangeCard('lastName', e.target.value)}
           label="Last Name"
         />
-
-        <div className={styles[`${c}__section-title`]}>
-          <Input
-            id="title"
-            value={card.title || ''}
-            onChange={(e) => handleChangeCard('title', e.target.value)}
-            label="Title"
-            fullWidth
-          />
-        </div>
       </div>
 
       <div className={styles[`${c}__section`]}>

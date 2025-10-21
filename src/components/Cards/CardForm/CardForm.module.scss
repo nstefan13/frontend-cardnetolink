@@ -140,6 +140,14 @@
       gap: $extra-small-spacing;
     }
 
+    &-prefix {
+      width: 50%;
+
+      @media screen and (min-width: $mobile-breakpoint) {
+        width: 25%;
+      }
+    }
+
     &-item {
       width: 100%;
       display: flex;

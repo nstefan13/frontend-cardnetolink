@@ -47,6 +47,7 @@ function CardPage({ params }: CardPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const displayMode: number = 1; // try changing it to 2 and see how the cards get displayed
 
   const fetchCardData = async () => {
     try {
@@ -138,11 +139,13 @@ function CardPage({ params }: CardPageProps) {
 
           <div className={styles[`${c}__section-user-titles`]}>
             <div className={styles[`${c}__section-user-titles-name`]}>
-              <p>{card ? card.firstName + ' ' + card.lastName : ''}</p>
+              <p>
+                {card ? (displayMode === 2 ? card.title + ' ' : '') + card.firstName + ' ' + card.lastName : ''}
+              </p>
             </div>
 
             <div className={styles[`${c}__section-user-titles-position`]}>
-              <p>{card.title ? card.title : ''}</p>
+              { displayMode === 2 && <p>{card.positionTitle ? card.positionTitle : ''}</p> }
               <p>{card.organizationName ? card.organizationName : ''}</p>
             </div>
           </div>

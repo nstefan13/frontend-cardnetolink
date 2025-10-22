@@ -6,6 +6,7 @@ import Image from 'next/image';
 
 import Input from '@/components/reusables/Input/Input';
 import Button from '@/components/reusables/Button/Button';
+import GeneratePasswordIcon from 'public/svgs/rotate-ccw-key.svg';
 
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -30,6 +31,19 @@ export default function Register() {
         toast.error('Register failed');
       });
   };
+
+  const handleGeneratePassword = () => {
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.?#$%@!&";
+    const max_length = 12;
+    let password = "";
+    
+    for (let i = 0; i < max_length; i++) {
+      const arr = new Uint32Array(1); crypto.getRandomValues(arr);
+      password += charset[arr[0] % charset.length];
+    }
+
+    setPassword(password);
+  }
 
   const handleRedirect = () => {
     router.push('/auth/login');
@@ -57,15 +71,20 @@ export default function Register() {
           fullWidth
           variant="outlined"
         />
-        <Input
-          id="password"
-          type="password"
-          label="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          fullWidth
-          variant="outlined"
-        />
+        <div style={{ display: "flex", gap: "8px" }}>
+          <Input
+            id="password"
+            type="password"
+            label="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            fullWidth
+            variant="outlined"
+          />
+          <Button className={styles[`${c}-form-generate-password-btn`]} onClick={() => handleGeneratePassword()} variant='plain'>
+            <Image color='red' src={GeneratePasswordIcon} alt="Generate Password"/>
+          </Button>
+        </div>
         <div>
           <Button style={{ fontSize: '16px', fontWeight: '400' }} onClick={handleSubmit} fullWidth>
             Create

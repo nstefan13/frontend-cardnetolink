@@ -101,10 +101,10 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
             </div>
 
             <div>
-              <button onClick={handleSaveOnlineQRCode} className={styles[`${c}-row-buttons`]}>
-                <Image src={QRCodePicture} alt="link icon" />
+              <button onClick={() => handleCopyQRSVG(onlineQRCodeURL)} className={styles[`${c}-row-buttons`]}>
+                <Image src={CopySVG} alt="link icon" width={50} />
               </button>
-              <p className={styles[`${c}-row-text`]}>Save Online QR Code</p>
+              <p className={styles[`${c}-row-text`]}>Copy Online QR SVG</p>
             </div>
 
             <div>
@@ -115,17 +115,17 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
             </div>
 
             <div>
-              <button onClick={handleSaveOfflineQRCode} className={styles[`${c}-row-buttons`]}>
-                <Image src={QRCodePicture} alt="link icon" />
+              <button onClick={() => handleCopyQRSVG(offlineQRCodeURL)} className={styles[`${c}-row-buttons`]}>
+                <Image src={CopySVG} alt="link icon" width={50} />
               </button>
-              <p className={styles[`${c}-row-text`]}>Save Offline QR Code</p>
+              <p className={styles[`${c}-row-text`]}>Copy Offline QR SVG</p>
             </div>
 
             <div>
-              <button onClick={() => checked ? handleCopyQRSVG(onlineQRCodeURL) : handleCopyQRSVG(offlineQRCodeURL)} className={styles[`${c}-row-buttons`]}>
-                <Image src={CopySVG} alt="link icon" width={50} />
+              <button onClick={checked ? handleSaveOnlineQRCode : handleSaveOfflineQRCode} className={styles[`${c}-row-buttons`]}>
+                <Image src={QRCodePicture} alt="link icon" />
               </button>
-              <p className={styles[`${c}-row-text`]}>Copy { checked ? 'Online' : 'Offline' } QR SVG</p>
+              <p className={styles[`${c}-row-text`]}>Save { checked ? 'Online' : 'Offline' } QR Code</p>
             </div>
           </div>
 

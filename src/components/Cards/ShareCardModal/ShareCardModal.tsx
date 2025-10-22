@@ -7,6 +7,7 @@ import Modal from '@/components/reusables/Modal/Modal';
 import Switch from '@/components/reusables/Toggle/Switch';
 import { constants } from '@/configs';
 
+import CopySVG from 'public/svgs/copy-svg.svg';
 import SharePicture from 'public/share.png';
 import ShareLinkPicture from 'public/svgs/share-links.svg';
 import QRCodePicture from 'public/svgs/qrcode-icon.svg';
@@ -25,6 +26,8 @@ interface ShareCardModalProps {
 
 export default function ShareCardModal({ uuid, username, open, setOpen }: ShareCardModalProps) {
   const [checked, setChecked] = useState(true);
+  const onlineQRCodeURL = `${process.env.NEXT_PUBLIC_API_URL}/cards/${uuid}/qr-online-svg`;
+  const offlineQRCodeURL = `${process.env.NEXT_PUBLIC_API_URL}/cards/${uuid}/qr-offline-svg`;
 
   if (!uuid) {
     return <></>;
@@ -44,6 +47,14 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
     window.open(`${constants.apiUrl}/cards/${uuid}/qr-offline`);
     toast.success('Offline QR Code saved');
   };
+
+  const handleCopyQRSVG = async (url: string) => {
+    const resp = await fetch(url);
+    if (resp.status === 200) {
+      window.navigator.clipboard.writeText(await resp.text());
+      toast.success('Text copied to clipboard');
+    }
+  }
 
   const handleSaveVcf = () => {
     toast.success('URL copied to clipboard');
@@ -67,17 +78,9 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
               </p>
             </div>
             <Image
-              src={
-                checked
-                  ? `https://cardneto.link/api/cards/${uuid}/qr-online`
-                  : `https://cardneto.link/api/cards/${uuid}/qr-offline`
-              }
+              src={checked ? onlineQRCodeURL : offlineQRCodeURL}
               unoptimized
-              overrideSrc={
-                checked
-                  ? `https://cardneto.link/api/cards/${uuid}/qr-online`
-                  : `https://cardneto.link/api/cards/${uuid}/qr-offline`
-              }
+              overrideSrc={checked ? onlineQRCodeURL : offlineQRCodeURL}
               width={210}
               height={210}
               quality={100}
@@ -116,6 +119,13 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
                 <Image src={QRCodePicture} alt="link icon" />
               </button>
               <p className={styles[`${c}-row-text`]}>Save Offline QR Code</p>
+            </div>
+
+            <div>
+              <button onClick={() => checked ? handleCopyQRSVG(onlineQRCodeURL) : handleCopyQRSVG(offlineQRCodeURL)} className={styles[`${c}-row-buttons`]}>
+                <Image src={CopySVG} alt="link icon" width={50} />
+              </button>
+              <p className={styles[`${c}-row-text`]}>Copy { checked ? 'Online' : 'Offline' } QR SVG</p>
             </div>
           </div>
 

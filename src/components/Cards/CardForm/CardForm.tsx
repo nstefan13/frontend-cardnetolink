@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Popover } from 'react-tiny-popover';
 import toast from 'react-hot-toast';
 import classNames from 'classnames';
+import ReactSelect, { StylesConfig } from 'react-select';
 
 import Textarea from '@/components/reusables/Textarea/Textarea';
 import Input from '@/components/reusables/Input/Input';
@@ -161,6 +162,63 @@ function deepTrimCard(card: Card): Card {
       url: trimString(site.url),
     })),
   };
+}
+
+/// A Select-like component used only for choosing the title when creating
+/// a new card. Unlike Select, it has some minor tweaks
+/// which make the placeholder look similar to the one in the 
+/// <Input/> component.
+function TitleSelect({ ...props }) {
+  const customStyles: StylesConfig = {
+    control: (provided) => ({
+      ...provided,
+      height: 45,
+      border: '1px solid #C6C2C2',
+      borderRadius: '8px',
+      fontSize: 14,
+      padding: 4,
+      '&:hover': {
+        border: '1px solid #C6C2C2'
+      }
+    }),
+    singleValue: (provided) => ({ ...provided, textOverflow: 'clip' }),
+    indicatorSeparator: () => ({ width: 0 }),
+    dropdownIndicator: (provided) => ({ ...provided, padding: '0 !important' }),
+    menu: (provided) => ({
+      ...provided,
+      margin: 0,
+      width: '100%',
+      borderRadius: 6,
+      border: '1px solid #C6C2C2',
+      padding: '6px 0px',
+      zIndex: 2
+    }),
+    option: (provided, props) => ({
+      ...provided,
+      height: 45,
+      fontSize: 14,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      ':hover': {
+        backgroundColor: '#1D61DF',
+        color: '#FFFFFF'
+      },
+      backgroundColor: props.isSelected ? '#1D61DF' : '#FFFFFF'
+    }),
+    valueContainer: (provided) => ({
+      ...provided,
+      justifyItems: 'start'
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#554043',
+      justifyItems: 'start',
+      margin: 0,
+    }),
+  };
+
+  return <ReactSelect styles={customStyles} isSearchable={false} {...props} />;
 }
 
 function CardForm({ uuid }: CardFormProps) {
@@ -764,25 +822,14 @@ function CardForm({ uuid }: CardFormProps) {
           <label>Personal</label>
         </div>
 
-        <div className={styles[`${c}__section-title`]}>
-          <Select
-            className={styles[`${c}__section-prefix`]}
-            placeholder="Title"
-            options={titleOptions}
-            defaultValue={titleOptions.find((option) => option.value === card.title)}
-            onChange={(option) => handleChangeCard('title', (option as any).value)}
-          />
-          
-          <Input
-            fullWidth
-            id="first-name"
-            type="text"
-            value={card.firstName || ''}
-            onChange={(e) => handleChangeCard('firstName', e.target.value)}
-            label="First Name"
-          />
-        </div>
-
+        <Input
+          fullWidth
+          id="first-name"
+          type="text"
+          value={card.firstName || ''}
+          onChange={(e) => handleChangeCard('firstName', e.target.value)}
+          label="First Name"
+        />
 
         <Input
           id="last-name"
@@ -790,6 +837,14 @@ function CardForm({ uuid }: CardFormProps) {
           value={card.lastName || ''}
           onChange={(e) => handleChangeCard('lastName', e.target.value)}
           label="Last Name"
+        />
+
+        <TitleSelect
+          className={styles[`${c}__section-title`]}
+          placeholder="Title (Optional)"
+          options={titleOptions}
+          defaultValue={titleOptions.find((option) => option.value === card.title)}
+          onChange={(option: any) => handleChangeCard('title', (option as any).value)}
         />
       </div>
 

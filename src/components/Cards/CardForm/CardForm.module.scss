@@ -136,15 +136,10 @@
     }
 
     &-title {
-      display: flex;
-      gap: $extra-small-spacing;
-    }
-
-    &-prefix {
-      width: 50%;
-
+      width: 60%;
+      
       @media screen and (min-width: $mobile-breakpoint) {
-        width: 25%;
+        width: 40%;
       }
     }
 

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import { Tooltip } from 'react-tooltip';
 import { EventHandler, MouseEventHandler, useState } from 'react';
 
 import Button from '@/components/reusables/Button/Button';
@@ -29,25 +30,42 @@ interface ShareCardModalProps {
 }
 
 function SaveQRButton({ handleCopy, handleDownload }: {
-  handleCopy : MouseEventHandler<HTMLButtonElement>,
+  handleCopy: MouseEventHandler<HTMLButtonElement>,
   handleDownload: MouseEventHandler<HTMLButtonElement>
 }) {
-  return <div className={styles[`${c}-row-saveqr`]}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "6px" }}>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <Image width={64} height={64} src={QRCodePicture} alt="link icon"/>
-            </div>
+  return <>
+    <div className={styles[`${c}-row-saveqr`]}>
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "6px" }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <Image width={64} height={64} src={QRCodePicture} alt="link icon" />
+        </div>
 
-            <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "end" }}>
-              <button className={styles[`${c}-actionbtn`]} onClick={handleCopy}>
-                <Copy width={25} height={25}/>
-              </button>
-              <button className={styles[`${c}-actionbtn`]} onClick={handleDownload}>
-                <Download width={25} height={25}/>
-              </button>
-            </div>
-          </div>
-        </div>;
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "end" }}>
+          <button
+            data-tooltip-id='tooltip'
+            data-tooltip-content={'Copy to clipboard'}
+            data-tooltip-place='left'
+            className={styles[`${c}-actionbtn`]}
+            onClick={handleCopy}
+          >
+            <Copy width={25} height={25} style={{ pointerEvents: 'none' }} />
+          </button>
+
+          <button 
+            data-tooltip-id='tooltip'
+            data-tooltip-content={'Download'}
+            data-tooltip-place='left'
+            className={styles[`${c}-actionbtn`]}
+            onClick={handleDownload}
+          >
+            <Download width={25} height={25} style={{ pointerEvents: 'none' }} />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <Tooltip id='tooltip'/>
+  </>
 }
 
 export default function ShareCardModal({ uuid, username, open, setOpen }: ShareCardModalProps) {
@@ -93,7 +111,7 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
 
   return (
     <>
-      <Modal open={open} setOpen={setOpen} 
+      <Modal open={open} setOpen={setOpen}
         modalComponentStyle={{
           maxWidth: '40%',
         }}
@@ -139,7 +157,7 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
                 handleDownload={handleSaveOnlineQRCode}
               />
               <div className={styles[`${c}-row-text`]}>
-                <Wifi width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }}/>
+                <Wifi width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }} />
                 <span>Online QR</span>
               </div>
             </div>
@@ -157,7 +175,7 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
                 handleDownload={handleSaveOfflineQRCode}
               />
               <div className={styles[`${c}-row-text`]}>
-                <WifiOff width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }}/>
+                <WifiOff width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }} />
                 <span>Offline QR</span>
               </div>
             </div>

@@ -8,6 +8,7 @@ import Header from '@/components/layout/Header/Header';
 import Paper from '@/components/reusables/Paper/Paper';
 
 import '@/styles/global.scss';
+import 'react-tooltip/dist/react-tooltip.css';
 import Head from 'next/head';
 
 const onest = Onest({

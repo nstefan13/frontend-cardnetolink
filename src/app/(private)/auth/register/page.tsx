@@ -80,6 +80,7 @@ export default function Register() {
             onChange={(e) => setPassword(e.target.value)}
             fullWidth
             variant="outlined"
+            autoComplete='new-password'
           />
           <Button className={styles[`${c}-form-generate-password-btn`]} onClick={() => handleGeneratePassword()} variant='plain'>
             <Image color='red' src={GeneratePasswordIcon} alt="Generate Password"/>

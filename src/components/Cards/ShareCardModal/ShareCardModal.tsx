@@ -33,7 +33,7 @@ function SaveQRButton({ handleCopy, handleDownload }: {
   handleDownload: MouseEventHandler<HTMLButtonElement>
 }) {
   return <div className={styles[`${c}-row-saveqr`]}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "4px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "6px" }}>
             <div style={{ display: "flex", flexDirection: "column" }}>
               <Image width={64} height={64} src={QRCodePicture} alt="link icon"/>
             </div>

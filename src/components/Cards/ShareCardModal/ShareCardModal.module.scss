@@ -77,16 +77,12 @@
 
     &-saveqr {
       padding: $medium-small-spacing;
-      width: 120px;
+      width: 128px;
       height: 90px;
       border: 1px solid $neutral-100;
       border-radius: $extra-small-spacing;
       background-color: white;
       color: $color-primary;
-
-      // display: flex;
-      // justify-items: center;
-      // align-items: center;
     }
 
     &-buttons:hover {

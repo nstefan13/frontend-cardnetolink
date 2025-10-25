@@ -157,7 +157,7 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
                 handleDownload={handleSaveOnlineQRCode}
               />
               <div className={styles[`${c}-row-text`]}>
-                <Wifi width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }} />
+                <Wifi width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }} strokeWidth={'0.17em'} />
                 <span>Online QR</span>
               </div>
             </div>
@@ -175,7 +175,7 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
                 handleDownload={handleSaveOfflineQRCode}
               />
               <div className={styles[`${c}-row-text`]}>
-                <WifiOff width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }} />
+                <WifiOff width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }} strokeWidth={'0.17em'} />
                 <span>Offline QR</span>
               </div>
             </div>

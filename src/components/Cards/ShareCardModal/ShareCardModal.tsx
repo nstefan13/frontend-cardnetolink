@@ -63,8 +63,6 @@ function SaveQRButton({ handleCopy, handleDownload }: {
         </div>
       </div>
     </div>
-
-    <Tooltip id='tooltip'/>
   </>
 }
 
@@ -157,8 +155,14 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
                 handleDownload={handleSaveOnlineQRCode}
               />
               <div className={styles[`${c}-row-text`]}>
-                <Wifi width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }} strokeWidth={'0.17em'} />
-                <span>Online QR</span>
+                <span
+                  data-tooltip-id='tooltip'
+                  data-tooltip-content={'Only scannable while connected on WiFi'}
+                  data-tooltip-place='left'
+                >
+                  <Wifi width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }} strokeWidth={'0.17em'} />
+                  <span>Online QR</span>
+                </span>
               </div>
             </div>
 
@@ -175,8 +179,14 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
                 handleDownload={handleSaveOfflineQRCode}
               />
               <div className={styles[`${c}-row-text`]}>
-                <WifiOff width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }} strokeWidth={'0.17em'} />
-                <span>Offline QR</span>
+                  <span
+                    data-tooltip-id='tooltip'
+                    data-tooltip-content={'Available for scanning without WiFi'}
+                    data-tooltip-place='left'
+                  >
+                    <WifiOff width={'1em'} height={'1em'} style={{ verticalAlign: "-0.1em", marginRight: "2px" }} strokeWidth={'0.17em'} />
+                    <span>Offline QR</span>
+                  </span>
               </div>
             </div>
           </div>
@@ -184,6 +194,8 @@ export default function ShareCardModal({ uuid, username, open, setOpen }: ShareC
           <Button onClick={handleCloseModal} fullWidth variant="contained">
             Done
           </Button>
+
+          <Tooltip id='tooltip'/>
         </div>
       </Modal>
     </>

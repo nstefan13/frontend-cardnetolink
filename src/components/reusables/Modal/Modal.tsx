@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import classNames from 'classnames';
-import { PropsWithChildren } from 'react';
+import { CSSProperties, PropsWithChildren } from 'react';
 import { Sheet } from 'react-modal-sheet';
 
 import Paper from '../Paper/Paper';
@@ -12,11 +12,13 @@ import styles from './Modal.module.scss';
 interface ModalProps {
   open: boolean;
   setOpen: (open: boolean) => void;
+  modalComponentStyle?: CSSProperties;
+  paperComponentStyle?: CSSProperties;
 }
 
 const c = 'modal-component';
 
-function Modal({ open, setOpen, children }: PropsWithChildren<ModalProps>) {
+function Modal({ open, setOpen, modalComponentStyle: modalComponentStyles, paperComponentStyle: paperComponentStyles, children }: PropsWithChildren<ModalProps>) {
   const handleCloseModal = () => {
     setOpen(false);
   };
@@ -34,8 +36,9 @@ function Modal({ open, setOpen, children }: PropsWithChildren<ModalProps>) {
           className={classNames(styles[c], {
             [styles['closed']]: !open
           })}
+          style={modalComponentStyles}
         >
-          <Paper>{children} </Paper>
+          <Paper style={paperComponentStyles}>{children} </Paper>
           <div className={styles[`${c}__close`]} onClick={handleCloseModal}>
             <Image src={Close} alt="close" />
           </div>

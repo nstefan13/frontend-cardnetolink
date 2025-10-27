@@ -6,12 +6,13 @@ import { Popover } from 'react-tiny-popover';
 import toast from 'react-hot-toast';
 import classNames from 'classnames';
 import ReactSelect, { StylesConfig } from 'react-select';
+import { useMapsLibrary, APIProvider as GoogleMapsApiProvider } from '@vis.gl/react-google-maps';
+import { titleCase } from 'title-case';
 
 import Textarea from '@/components/reusables/Textarea/Textarea';
 import Input from '@/components/reusables/Input/Input';
 import Button from '@/components/reusables/Button/Button';
 import Select from '@/components/reusables/Select/Select';
-import { useMapsLibrary } from '@vis.gl/react-google-maps';
 
 import { EmailTypeEnum } from '@/enums/emailTypeEnum';
 import { PhoneTypeEnum } from '@/enums/phoneTypeEnum';
@@ -39,6 +40,7 @@ import WarningIcon from 'public/svgs/warning.svg';
 import CheckmarkIcon from 'public/svgs/checkmark.svg';
 
 import styles from './CardForm.module.scss';
+import PlaceAutocomplete, { PlaceAutcompleteProps } from '@/components/reusables/PlaceAutocomplete/PlaceAutocomplete';
 
 interface CardFormProps {
   uuid?: string;
@@ -222,40 +224,94 @@ function TitleSelect({ ...props }) {
   return <ReactSelect styles={customStyles} isSearchable={false} {...props} />;
 }
 
-interface PlaceAutocompleteProps {
-  onPlaceSelect: (place: google.maps.places.PlaceResult | null) => void;
+function InputPlaceName({ onPlaceSelect, ...props }: {
+  onPlaceSelect: (place?: google.maps.places.Place) => void,
+  [key: string]: any
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  return <div style={{ position: "relative", width: "100%", flex: "0 0 70%", minWidth: 0 }}>
+    <Input
+      {...props as any}
+      ref={inputRef}
+      fullWidth={true}
+    />
+
+    <PlaceAutocomplete
+      inputRef={inputRef}
+      fields={["id", "addressComponents", "formattedAddress", "displayName"]}
+      onPlaceSelect={onPlaceSelect}
+    />
+  </div>
 }
 
-const PlaceAutocomplete = ({ onPlaceSelect }: PlaceAutocompleteProps) => {
-  const [placeAutocomplete, setPlaceAutocomplete] =
-    useState<google.maps.places.Autocomplete | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const places = useMapsLibrary('places');
+function parsePlace(place: google.maps.places.Place): {
+  name: string,
+  street: string,
+  apt: string,
+  city: string,
+  region: string,
+  country: string,
+  zip: string
+} | undefined {
+  if (!place.addressComponents) return;
 
-  useEffect(() => {
-    if (!places || !inputRef.current) return;
+  const type2info = new Map<String, Array<any>>();
+  for (const entry of place.addressComponents) {
+      for (const t of entry['types']) {
+          if (!type2info.get(t)) type2info.set(t, Array<any>());
+          type2info.get(t)!.push({
+              longText: entry['longText'] ?? '',
+              shortText: entry['shortText'] ?? ''
+          });
+      }
+  }
 
-    const options = {
-      fields: ['geometry', 'name', 'formatted_address']
-    };
+  const administrative_area_level_1 = type2info.get('administrative_area_level_1')?.at(0)?.longText ?? "";
+  const administrative_area_level_2 = type2info.get('administrative_area_level_2')?.at(0)?.longText ?? "";
+  const country = type2info.get('country')?.at(0)?.longText ?? "";
+  const floor = type2info.get('floor')?.at(0)?.longText ?? "";
+  const locality = type2info.get('locality')?.at(0)?.longText ?? "";
+  const postal_code = type2info.get('postal_code')?.at(0)?.longText ?? "";
+  const room = type2info.get('room')?.at(0)?.longText ?? "";
+  const route = type2info.get('route')?.at(0)?.longText ?? "";
+  const street_number = type2info.get('street_number')?.at(0)?.longText ?? "";
+  const sublocality = type2info.get('sublocality')?.at(0)?.longText ?? "";
+  const sublocality_level_1 = type2info.get('sublocality_level_1')?.at(0)?.longText ?? "";
 
-    setPlaceAutocomplete(new places.Autocomplete(inputRef.current, options));
-  }, [places]);
+  // let street = "";
+  // if (route !== "") {
+  //     street = route + " " + street_number;
+  // }
+  // street = street.trim();
+  const street = place.formattedAddress;
 
-  useEffect(() => {
-    if (!placeAutocomplete) return;
+  const building = [
+      floor !== "" ? "Floor " + floor : "",
+      room  !== "" ? "Room "  + room  : ""
+  ].filter((x) => x !== "").join(", ").trim();
 
-    placeAutocomplete.addListener('place_changed', () => {
-      onPlaceSelect(placeAutocomplete.getPlace());
-    });
-  }, [onPlaceSelect, placeAutocomplete]);
+  // considerăm `region` ca fiind județul (care în GMaps este `administrative_area_level_1`) 
+  // și `city` ca fiind un oraș din județ
+  let region = administrative_area_level_1;
+  let city = titleCase(administrative_area_level_2 ?? sublocality);
+  // numai că GMaps consideră Bucureștiul ca fiind un administrative_area_level_1, așa că în cazul Bucureștiului
+  // schimb rolul lor: aici, `city` va fi Bucharest, iar `region` va fi sectorul (`sublocality_level_1`)
+  if (administrative_area_level_1 === "București") {
+      city = "București";
+      region = (sublocality_level_1 as string).replace("Bucureşti", "").replace("Bucuresti", "").trim();
+  }
 
-  return (
-    <div className="autocomplete-container">
-      <input ref={inputRef} />
-    </div>
-  );
-};
+  return {
+    name: place.displayName ?? '',
+    street: street ?? '',
+    apt: building ?? '',
+    city: city ?? '',
+    region: region ?? '',
+    country: country ?? '',
+    zip: postal_code ?? ''
+  }
+}
 
 function CardForm({ uuid }: CardFormProps) {
   const { user } = useAuth();
@@ -1060,7 +1116,37 @@ function CardForm({ uuid }: CardFormProps) {
                 error={!!validationErrors.addresses[index]}
               />
 
-              <PlaceAutocomplete onPlaceSelect={(place) => { console.log(place) }} />
+              <InputPlaceName
+                id={'address-name' + index}
+                type="text"
+                value={address.addressName || ''}
+                className={styles[`${c}-row-input`]}
+                error={!!validationErrors.addresses[index]}
+                label={index ? `Name ${index + 1}` : 'Name'}
+                onChange={(e: any) => {
+                  handleAddressChange(index, 'addressName', e.target.value)
+                }}
+                onPlaceSelect={(place) => {
+                  if (!place) return;
+                  const parsedPlace = parsePlace(place);
+                  if (!parsedPlace) return;
+                  console.log(parsedPlace);
+
+                  const addressesCopy = [...card.addresses];
+                  addressesCopy[index] = { ...addressesCopy[index],
+                    addressName: parsedPlace.name,
+                    streetAddress: parsedPlace.street,
+                    apartment: parsedPlace.apt,
+                    city: parsedPlace.city,
+                    region: parsedPlace.region,
+                    country: parsedPlace.country,
+                    zipCode: parsedPlace.zip
+                  };
+                  setCard({ ...card, addresses: addressesCopy });
+                }}
+              />
+            
+              
               {/* <Input
                 id={'address-name' + index}
                 type="text"
@@ -1069,6 +1155,12 @@ function CardForm({ uuid }: CardFormProps) {
                 onChange={(e) => handleAddressChange(index, 'addressName', e.target.value)}
                 className={styles[`${c}-row-input`]}
                 error={!!validationErrors.addresses[index]}
+              /> */}
+
+              {/* 
+              <PlaceAutocomplete
+                value={'fd'}
+                onPlaceSelect={(place: any) => { console.log(place) }}
               /> */}
 
               <Button

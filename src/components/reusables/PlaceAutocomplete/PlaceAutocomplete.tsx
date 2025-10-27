@@ -13,10 +13,23 @@ declare module "react" {
 }
 
 export interface PlaceAutcompleteProps {
-    onPlaceSelect: (place: google.maps.places.PlaceResult | null) => void;
-    inputRef: RefObject<any>,
+    // Invoked after the user selects a place.
+    // Receives the google.maps.places.Place (or null/undefined) — only the properties
+    // requested via `fields` will be populated.
+    onPlaceSelect: (place?: google.maps.places.Place) => void;
+
+    // Names of place fields to retrieve when a selection occurs.
+    // See Google Places documentation for available field names.
+    fields: string[],
+
+    // Ref to an external HTML input element whose value is forwarded to the
+    // Google Places autocomplete input to trigger suggestions.
+    inputRef: RefObject<HTMLInputElement | null>,
 }
 
+// Utility function which loads the Google Maps places library, opens the
+// Shadow DOM of its autocomplete component calls the custom `mixin` function
+// on it for extra manipulation
 function loadPlacesLibrary(mixin: (root: ShadowRoot) => ShadowRoot) {
     const originalAttachShadow = Element.prototype.attachShadow;
 
@@ -45,40 +58,33 @@ function loadPlacesLibrary(mixin: (root: ShadowRoot) => ShadowRoot) {
     }, [places])
 }
 
-const stylesheet = `
-/* Hello from the shadows */
-:host {
-    color-scheme: none !important;
-}
-
-.autocomplete-icon,
-.clear-button,
-.input-container,
-.focus-ring {
-    display: none !important;
-}
-
-.place-autocomplete-element-text-div {
-    text-align: start !important;
-}
-
-&-input {
-    width: 70%;
-
-    @media screen and (max-width: 768px) {
-       width: 60%;
-    }
-}
-`;
-
+// Utility function which just adds some custom styles to a Shadow Root element
 function modifyStyle(root: ShadowRoot) {
+    const stylesheet = `
+    /* Hello from the shadows */
+    :host {
+        color-scheme: none !important;
+    }
+    
+    .autocomplete-icon,
+    .clear-button,
+    .input-container,
+    .focus-ring {
+        display: none !important;
+    }
+    
+    .place-autocomplete-element-text-div {
+        text-align: start !important;
+    }
+    `;
+
     const styleNode = document.createElement('style');
     styleNode.textContent = stylesheet;
     root.prepend(styleNode);
     return root;
 }
 
-function PlaceAutocomplete({ onPlaceSelect, inputRef }: PlaceAutcompleteProps) {
+function PlaceAutocomplete({ onPlaceSelect, fields, inputRef }: PlaceAutcompleteProps) {
     /// Load the places library and modify the styling of the component
     loadPlacesLibrary((root) => {
         const ret = modifyStyle(root);
@@ -88,8 +94,16 @@ function PlaceAutocomplete({ onPlaceSelect, inputRef }: PlaceAutcompleteProps) {
 
     /// Whenever a place was selected, we extract the useful information and pass it
     /// down to `onPlaceSelect`
-    const handlePlaceSelect = useCallback((e: any) => {
-        console.log(e);
+    const handlePlaceSelect = useCallback(async (e: any) => {
+        if (!e?.placePrediction?.toPlace) return;
+        const place = e.placePrediction.toPlace();
+
+        if (!place?.fetchFields) return;
+        const resp = await place.fetchFields({
+            fields
+        });
+
+        onPlaceSelect(resp.place)
     }, [onPlaceSelect]);
 
     useLayoutEffect(() => {
@@ -97,7 +111,10 @@ function PlaceAutocomplete({ onPlaceSelect, inputRef }: PlaceAutcompleteProps) {
 
         const inputBox = elRef.current.shadowRoot.querySelector('input')!;
         const externalInput = inputRef.current;
-        function forwardEvent(e: KeyboardEvent) {
+        
+        // Track previous value to detect deletions
+        let previousValue = externalInput.value;
+        function forwardKeyEvent(e: KeyboardEvent) {
             // For arrow keys, Enter, and Esc - prevent the external input from handling them
             if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === 'Escape' || e.key === 'Esc') {
                 e.preventDefault();
@@ -147,7 +164,7 @@ function PlaceAutocomplete({ onPlaceSelect, inputRef }: PlaceAutcompleteProps) {
                 Object.defineProperty(newEvent, 'keyCode', { value: keyCode });
                 Object.defineProperty(newEvent, 'which', { value: which });
                 
-                console.log('Forwarding key:', mappedKey, newEvent);
+                // console.log('Forwarding key:', mappedKey, newEvent);
                 inputBox.dispatchEvent(newEvent);
                 
                 // Also try dispatching on the custom element itself
@@ -155,21 +172,61 @@ function PlaceAutocomplete({ onPlaceSelect, inputRef }: PlaceAutcompleteProps) {
                 return;
             }
             
-            // For other keys, forward normally but ensure value is synced
-            inputBox.value = externalInput.value;
+            // For Backspace and Delete, forward the keydown but don't prevent default
+            // The actual value sync will happen in the input event
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                const keyCode = e.key === 'Backspace' ? 8 : 46;
+                const which = e.key === 'Backspace' ? 8 : 46;
+                
+                const newEvent = new KeyboardEvent(e.type, {
+                    key: e.key,
+                    code: e.code,
+                    keyCode: keyCode,
+                    which: which,
+                    bubbles: true,
+                    cancelable: true,
+                    composed: true,
+                    view: window
+                });
+                
+                Object.defineProperty(newEvent, 'keyCode', { value: keyCode });
+                Object.defineProperty(newEvent, 'which', { value: which });
+                
+                // console.log('Forwarding deletion key:', e.key, newEvent);
+                inputBox.dispatchEvent(newEvent);
+                // Don't return here - let the normal input handling proceed
+            }
+        }
+
+        function forwardInputEvent(e: Event) {
+            const currentValue = externalInput.value;
+            inputBox.value = currentValue;
+            
+            // Determine the correct inputType based on value change
+            let inputType = 'insertText';
+            if (currentValue.length < previousValue.length) {
+                inputType = 'deleteContentBackward';
+            } else if (currentValue.length > previousValue.length) {
+                inputType = 'insertText';
+            }
+            // Update previous value for next comparison
+            previousValue = currentValue;
+            
             const newEvent = new InputEvent('input', {
                 bubbles: true,
                 cancelable: true,
                 composed: true,
-                inputType: 'insertText'
+                inputType: inputType
             });
+            
+            // console.log('Forwarding input event:', inputType, 'value:', currentValue);
             inputBox.dispatchEvent(newEvent);
         }
 
         /// All input and keydown events will be forwarded to the
         /// google maps input box so that it can show suggestions
-        externalInput.addEventListener('input', forwardEvent);
-        externalInput.addEventListener('keydown', forwardEvent);
+        externalInput.addEventListener('input', forwardInputEvent);
+        externalInput.addEventListener('keydown', forwardKeyEvent);
 
         /// These events are dispatched by the gmp-place-autocomplete
         /// element and give us details regarding the selected place
@@ -178,8 +235,8 @@ function PlaceAutocomplete({ onPlaceSelect, inputRef }: PlaceAutcompleteProps) {
 
         const el = elRef.current;
         return () => {
-            externalInput.removeEventListener('input', forwardEvent);
-            externalInput.removeEventListener('keydown', forwardEvent);
+            externalInput.removeEventListener('input', forwardInputEvent);
+            externalInput.removeEventListener('keydown', forwardKeyEvent);
             el.removeEventListener('gmp-select', handlePlaceSelect);
             el.removeEventListener('gmp-placeselect', handlePlaceSelect);
         };
@@ -220,7 +277,7 @@ export default function ({ ...props }: PlaceAutcompleteProps) {
     ///     2. Autocomplete the fields
     ///     3. Fix the jitter of the input textbox
     ///     1. Stilizat Input
-    return <GoogleMapsApiProvider apiKey={'AIzaSyCAnKLuvG7GHZt3bfrElzosAQJLYGHo6JU'} version='beta'>
+    return <GoogleMapsApiProvider apiKey={'AIzaSyCAnKLuvG7GHZt3bfrElzosAQJLYGHo6JU'} version='beta' region='MD'>
         <PlaceAutocomplete {...props as any} />
     </GoogleMapsApiProvider>
 };

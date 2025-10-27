@@ -11,6 +11,7 @@ import Textarea from '@/components/reusables/Textarea/Textarea';
 import Input from '@/components/reusables/Input/Input';
 import Button from '@/components/reusables/Button/Button';
 import Select from '@/components/reusables/Select/Select';
+import { useMapsLibrary } from '@vis.gl/react-google-maps';
 
 import { EmailTypeEnum } from '@/enums/emailTypeEnum';
 import { PhoneTypeEnum } from '@/enums/phoneTypeEnum';
@@ -221,6 +222,41 @@ function TitleSelect({ ...props }) {
   return <ReactSelect styles={customStyles} isSearchable={false} {...props} />;
 }
 
+interface PlaceAutocompleteProps {
+  onPlaceSelect: (place: google.maps.places.PlaceResult | null) => void;
+}
+
+const PlaceAutocomplete = ({ onPlaceSelect }: PlaceAutocompleteProps) => {
+  const [placeAutocomplete, setPlaceAutocomplete] =
+    useState<google.maps.places.Autocomplete | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const places = useMapsLibrary('places');
+
+  useEffect(() => {
+    if (!places || !inputRef.current) return;
+
+    const options = {
+      fields: ['geometry', 'name', 'formatted_address']
+    };
+
+    setPlaceAutocomplete(new places.Autocomplete(inputRef.current, options));
+  }, [places]);
+
+  useEffect(() => {
+    if (!placeAutocomplete) return;
+
+    placeAutocomplete.addListener('place_changed', () => {
+      onPlaceSelect(placeAutocomplete.getPlace());
+    });
+  }, [onPlaceSelect, placeAutocomplete]);
+
+  return (
+    <div className="autocomplete-container">
+      <input ref={inputRef} />
+    </div>
+  );
+};
+
 function CardForm({ uuid }: CardFormProps) {
   const { user } = useAuth();
   const router = useRouter();
@@ -292,11 +328,11 @@ function CardForm({ uuid }: CardFormProps) {
       error.response.data.message.forEach((message: string) => {
         // Parse validation messages like "phones.0.phoneNumber must be a valid phone number"
         const match = message.match(/^(\w+)\.(\d+)\.(\w+)\s+(.+)$/);
-        
+
         if (match) {
           const [, fieldType, index, fieldName, errorMessage] = match;
           const fieldIndex = parseInt(index);
-          
+
           if (fieldType in errors) {
             if (!errors[fieldType as keyof Omit<ApiValidationErrors, 'general'>][fieldIndex]) {
               errors[fieldType as keyof Omit<ApiValidationErrors, 'general'>][fieldIndex] = [];
@@ -332,7 +368,7 @@ function CardForm({ uuid }: CardFormProps) {
     } catch (error) {
       const apiErrors = parseApiValidationErrors(error);
       setApiValidationErrors(apiErrors);
-      
+
       if (apiErrors.general.length > 0) {
         toast.error(apiErrors.general[0]);
       } else {
@@ -434,7 +470,7 @@ function CardForm({ uuid }: CardFormProps) {
     } catch (error) {
       const apiErrors = parseApiValidationErrors(error);
       setApiValidationErrors(apiErrors);
-      
+
       if (apiErrors.general.length > 0) {
         toast.error(apiErrors.general[0]);
       } else {
@@ -493,7 +529,7 @@ function CardForm({ uuid }: CardFormProps) {
     const phonesCopy = [...card.phones];
     phonesCopy[index] = { ...phonesCopy[index], [key]: value };
     setCard({ ...card, phones: phonesCopy });
-    
+
     // Clear API validation errors for this field when user starts typing
     if (apiValidationErrors.phones[index]) {
       const newApiErrors = { ...apiValidationErrors };
@@ -506,7 +542,7 @@ function CardForm({ uuid }: CardFormProps) {
     const emailsCopy = [...card.emails];
     emailsCopy[index] = { ...emailsCopy[index], [key]: value };
     setCard({ ...card, emails: emailsCopy });
-    
+
     // Clear API validation errors for this field when user starts typing
     if (apiValidationErrors.emails[index]) {
       const newApiErrors = { ...apiValidationErrors };
@@ -519,7 +555,7 @@ function CardForm({ uuid }: CardFormProps) {
     const websitesCopy = [...card.websites];
     websitesCopy[index] = { ...websitesCopy[index], [key]: value };
     setCard({ ...card, websites: websitesCopy });
-    
+
     // Clear API validation errors for this field when user starts typing
     if (apiValidationErrors.websites[index]) {
       const newApiErrors = { ...apiValidationErrors };
@@ -532,7 +568,7 @@ function CardForm({ uuid }: CardFormProps) {
     const addressesCopy = [...card.addresses];
     addressesCopy[index] = { ...addressesCopy[index], [key]: value };
     setCard({ ...card, addresses: addressesCopy });
-    
+
     // Clear API validation errors for this field when user starts typing
     if (apiValidationErrors.addresses[index]) {
       const newApiErrors = { ...apiValidationErrors };
@@ -713,14 +749,14 @@ function CardForm({ uuid }: CardFormProps) {
           containerStyle={{ top: '12px' }}
           content={
             <div className={styles[`${c}__section-user-name-input-popup`]}>
-              <Image 
-                src={isUsernameChecking ? WarningIcon : (isUsernameAvailable ? CheckmarkIcon : WarningIcon)} 
-                alt="icon" 
+              <Image
+                src={isUsernameChecking ? WarningIcon : (isUsernameAvailable ? CheckmarkIcon : WarningIcon)}
+                alt="icon"
               />
-              {isUsernameChecking 
-                ? 'Checking...' 
-                : isUsernameAvailable 
-                  ? 'Username Available' 
+              {isUsernameChecking
+                ? 'Checking...'
+                : isUsernameAvailable
+                  ? 'Username Available'
                   : 'Username Unavailable'
               }
             </div>
@@ -1023,7 +1059,9 @@ function CardForm({ uuid }: CardFormProps) {
                 }
                 error={!!validationErrors.addresses[index]}
               />
-              <Input
+
+              <PlaceAutocomplete onPlaceSelect={(place) => { console.log(place) }} />
+              {/* <Input
                 id={'address-name' + index}
                 type="text"
                 value={address.addressName || ''}
@@ -1031,7 +1069,7 @@ function CardForm({ uuid }: CardFormProps) {
                 onChange={(e) => handleAddressChange(index, 'addressName', e.target.value)}
                 className={styles[`${c}-row-input`]}
                 error={!!validationErrors.addresses[index]}
-              />
+              /> */}
 
               <Button
                 className={styles[`${c}-row-action`]}

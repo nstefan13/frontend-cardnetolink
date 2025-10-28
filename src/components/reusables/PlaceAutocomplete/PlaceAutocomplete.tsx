@@ -32,6 +32,14 @@ export interface PlaceAutcompleteProps {
 // on it for extra manipulation
 function loadPlacesLibrary(mixin: (root: ShadowRoot) => ShadowRoot) {
     const originalAttachShadow = Element.prototype.attachShadow;
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = function(query: string) {
+        if (query === "only screen and (max-width: 450px)") {
+            console.warn("Overwriting matchMedia", this);
+            return originalMatchMedia('(min-width: 9999px)');
+        }
+        return originalMatchMedia.call(this, query);
+    };
 
     /// Monkey-patch the attachShadow function to open the shadow DOM.
     /// This allows us to execute arbitrary code (that can be provided via
@@ -55,6 +63,7 @@ function loadPlacesLibrary(mixin: (root: ShadowRoot) => ShadowRoot) {
     useLayoutEffect(() => {
         if (!places) return;
         (Element.prototype as any).attachShadow = originalAttachShadow;
+        window.matchMedia = originalMatchMedia;
     }, [places])
 }
 
@@ -87,8 +96,8 @@ function modifyStyle(root: ShadowRoot) {
 function PlaceAutocomplete({ onPlaceSelect, fields, inputRef }: PlaceAutcompleteProps) {
     /// Load the places library and modify the styling of the component
     loadPlacesLibrary((root) => {
-        const ret = modifyStyle(root);
-        return ret;
+        modifyStyle(root);
+        return root;
     });
     const elRef = useRef<google.maps.places.PlaceAutocompleteElement>(null);
 
@@ -99,9 +108,7 @@ function PlaceAutocomplete({ onPlaceSelect, fields, inputRef }: PlaceAutcomplete
         const place = e.placePrediction.toPlace();
 
         if (!place?.fetchFields) return;
-        const resp = await place.fetchFields({
-            fields
-        });
+        const resp = await place.fetchFields({ fields });
 
         onPlaceSelect(resp.place)
     }, [onPlaceSelect]);
@@ -255,28 +262,22 @@ export default function ({ ...props }: PlaceAutcompleteProps) {
     const originalAppend = HTMLElement.prototype.append;
 
     (XMLHttpRequest.prototype as any).open = function(method: any, url: any, ...args: any) {
-        // console.log(url);
-        /// Same, forward this request to our proxy, which will add
-        /// the required API_KEY
+        if (url.includes('googleapis.com')) {
+        console.log("INTERCEPT FETCH", url);
+        }
         return originalOpen.apply(this, arguments as any);
     };
     (HTMLElement.prototype as any).append = function(...args: any) {
         for (const arg of args) {
             if (arg && arg.src && arg.tagName === "SCRIPT") {
-                if (arg.src.includes('maps.googleapis.com')) {
-                    /// Now forward this request to our proxy, which will
-                    /// add the required API_KEY
-                    // console.log("INTERCEPTED ", arg.src);
+                if (arg.src.includes('googleapis.com')) {
+                    console.log("INTERCEPTED SCRIPT", arg.src);
                 }
             }
         }
         return originalAppend.call(this, ...args);
     }
 
-    /// Mai ai de:
-    ///     2. Autocomplete the fields
-    ///     3. Fix the jitter of the input textbox
-    ///     1. Stilizat Input
     return <GoogleMapsApiProvider apiKey={'AIzaSyCAnKLuvG7GHZt3bfrElzosAQJLYGHo6JU'} version='beta' region='MD'>
         <PlaceAutocomplete {...props as any} />
     </GoogleMapsApiProvider>

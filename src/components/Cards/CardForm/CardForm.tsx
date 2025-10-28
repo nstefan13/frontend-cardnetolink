@@ -230,7 +230,10 @@ function InputPlaceName({ onPlaceSelect, ...props }: {
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  return <div style={{ position: "relative", width: "100%", flex: "0 0 70%", minWidth: 0 }}>
+  return <div style={{
+    position: "relative",
+    width: "100%", flex: "0 0 70%", minWidth: 0
+  }}>
     <Input
       {...props as any}
       ref={inputRef}
@@ -246,71 +249,69 @@ function InputPlaceName({ onPlaceSelect, ...props }: {
 }
 
 function parsePlace(place: google.maps.places.Place): {
-  name: string,
-  street: string,
-  apt: string,
+  addressName: string,
+  streetAddress: string,
+  apartment: string,
   city: string,
   region: string,
   country: string,
-  zip: string
+  zipCode: string
 } | undefined {
+  console.log("PARSING PLACE", place);
   if (!place.addressComponents) return;
 
-  const type2info = new Map<String, Array<any>>();
+  const type2info = new Map<string, Array<any>>();
   for (const entry of place.addressComponents) {
-      for (const t of entry['types']) {
-          if (!type2info.get(t)) type2info.set(t, Array<any>());
-          type2info.get(t)!.push({
-              longText: entry['longText'] ?? '',
-              shortText: entry['shortText'] ?? ''
-          });
-      }
+    for (const type of entry.types) {
+      if (!type2info.has(type)) type2info.set(type, []);
+      type2info.get(type)!.push({
+        longText: entry.longText ?? '',
+        shortText: entry.shortText ?? ''
+      });
+    }
   }
+  const getAddressComponent = (name: string) => type2info.get(name)?.[0]?.longText ?? "";
+  
+  const floor = getAddressComponent('floor');
+  const room = getAddressComponent('room');
+  let streetAddress = [getAddressComponent('route'), getAddressComponent('street_number')].filter(Boolean).join(" ").trim();
+  let building = [floor ? `Floor ${floor}` : "", room ? `Room ${room}` : ""].filter(Boolean).join(", ").trim();
 
-  const administrative_area_level_1 = type2info.get('administrative_area_level_1')?.at(0)?.longText ?? "";
-  const administrative_area_level_2 = type2info.get('administrative_area_level_2')?.at(0)?.longText ?? "";
-  const country = type2info.get('country')?.at(0)?.longText ?? "";
-  const floor = type2info.get('floor')?.at(0)?.longText ?? "";
-  const locality = type2info.get('locality')?.at(0)?.longText ?? "";
-  const postal_code = type2info.get('postal_code')?.at(0)?.longText ?? "";
-  const room = type2info.get('room')?.at(0)?.longText ?? "";
-  const route = type2info.get('route')?.at(0)?.longText ?? "";
-  const street_number = type2info.get('street_number')?.at(0)?.longText ?? "";
-  const sublocality = type2info.get('sublocality')?.at(0)?.longText ?? "";
-  const sublocality_level_1 = type2info.get('sublocality_level_1')?.at(0)?.longText ?? "";
+  if (!building) {
+    streetAddress = getAddressComponent('route');
+    building = getAddressComponent('street_number');
+  }
+  
+  let region;
+  let city;
+  const administrative_area_level_1 = getAddressComponent('administrative_area_level_1');
+  const sublocality_level_1 = getAddressComponent('sublocality_level_1');
 
-  // let street = "";
-  // if (route !== "") {
-  //     street = route + " " + street_number;
-  // }
-  // street = street.trim();
-  const street = place.formattedAddress;
-
-  const building = [
-      floor !== "" ? "Floor " + floor : "",
-      room  !== "" ? "Room "  + room  : ""
-  ].filter((x) => x !== "").join(", ").trim();
-
-  // considerăm `region` ca fiind județul (care în GMaps este `administrative_area_level_1`) 
-  // și `city` ca fiind un oraș din județ
-  let region = administrative_area_level_1;
-  let city = titleCase(administrative_area_level_2 ?? sublocality);
-  // numai că GMaps consideră Bucureștiul ca fiind un administrative_area_level_1, așa că în cazul Bucureștiului
-  // schimb rolul lor: aici, `city` va fi Bucharest, iar `region` va fi sectorul (`sublocality_level_1`)
   if (administrative_area_level_1 === "București") {
-      city = "București";
-      region = (sublocality_level_1 as string).replace("Bucureşti", "").replace("Bucuresti", "").trim();
+    region = (sublocality_level_1 as string).replace(/Bucureşti|Bucuresti/, "").trim();
+    city = "București";
+  } else {
+    region = administrative_area_level_1;
+    city = titleCase(
+      getAddressComponent('administrative_area_level_2') ?? 
+      getAddressComponent('sublocality')
+    );
+
+    if (!city) {
+      city = administrative_area_level_1;
+      region = '';
+    }
   }
 
   return {
-    name: place.displayName ?? '',
-    street: street ?? '',
-    apt: building ?? '',
+    addressName: place.displayName ?? '',
+    streetAddress: streetAddress ?? '',
+    apartment: building ?? '',
     city: city ?? '',
     region: region ?? '',
-    country: country ?? '',
-    zip: postal_code ?? ''
-  }
+    country: getAddressComponent('country') ?? '',
+    zipCode: getAddressComponent('postal_code') ?? ''
+  };
 }
 
 function CardForm({ uuid }: CardFormProps) {
@@ -1130,38 +1131,23 @@ function CardForm({ uuid }: CardFormProps) {
                   if (!place) return;
                   const parsedPlace = parsePlace(place);
                   if (!parsedPlace) return;
-                  console.log(parsedPlace);
 
                   const addressesCopy = [...card.addresses];
-                  addressesCopy[index] = { ...addressesCopy[index],
-                    addressName: parsedPlace.name,
-                    streetAddress: parsedPlace.street,
-                    apartment: parsedPlace.apt,
-                    city: parsedPlace.city,
-                    region: parsedPlace.region,
-                    country: parsedPlace.country,
-                    zipCode: parsedPlace.zip
-                  };
+                  addressesCopy[index] = { ...addressesCopy[index], ...parsedPlace };
                   setCard({ ...card, addresses: addressesCopy });
                 }}
               />
-            
-              
+
               {/* <Input
                 id={'address-name' + index}
                 type="text"
                 value={address.addressName || ''}
-                label={index ? `Name ${index + 1}` : 'Name'}
-                onChange={(e) => handleAddressChange(index, 'addressName', e.target.value)}
                 className={styles[`${c}-row-input`]}
                 error={!!validationErrors.addresses[index]}
-              /> */}
+                label={index ? `Name ${index + 1}` : 'Name'}
+              >
+              </Input> */}
 
-              {/* 
-              <PlaceAutocomplete
-                value={'fd'}
-                onPlaceSelect={(place: any) => { console.log(place) }}
-              /> */}
 
               <Button
                 className={styles[`${c}-row-action`]}

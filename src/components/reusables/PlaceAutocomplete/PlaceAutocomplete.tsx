@@ -258,7 +258,7 @@ function PlaceAutocomplete({ onPlaceSelect, fields, inputRef }: PlaceAutcomplete
 }
 
 export default function ({ ...props }: PlaceAutcompleteProps) {
-    return <GoogleMapsApiProvider apiKey={'BOGUS_KEY'} version='beta' region='MD'>
+    return <GoogleMapsApiProvider apiKey={'AIzaSyCAnKLuvG7GHZt3bfrElzosAQJLYGHo6JU'} version='beta' region='MD'>
         <PlaceAutocomplete {...props as any} />
     </GoogleMapsApiProvider>
 };

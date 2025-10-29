@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import classNames from 'classnames';
 
 import Input from '@/components/reusables/Input/Input';
@@ -43,6 +43,7 @@ const patterns = {
 
 function CardPage({ params }: CardPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [card, setCard] = useState<Card | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +60,14 @@ function CardPage({ params }: CardPageProps) {
     }
   };
 
+  const handleAddToContacts = () => {
+    window.location.href = `${constants.apiUrl}/cards/${params.uuid}/vcf`;
+  };
+
   useEffect(() => {
+    if (searchParams.get('importContact') !== null) {
+      handleAddToContacts();
+    }
     fetchCardData();
   }, []);
 
@@ -71,9 +79,7 @@ function CardPage({ params }: CardPageProps) {
     return <div></div>;
   }
 
-  const handleAddToContacts = () => {
-    window.location.href = `${constants.apiUrl}/cards/${params.uuid}/vcf`;
-  };
+
 
   const handleClickLink = (url: string) => {
     window.open(url, '_blank');

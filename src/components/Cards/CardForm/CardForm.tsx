@@ -257,7 +257,6 @@ function parsePlace(place: google.maps.places.Place): {
   country: string,
   zipCode: string
 } | undefined {
-  console.log("PARSING PLACE", place);
   if (!place.addressComponents) return;
 
   const type2info = new Map<string, Array<any>>();

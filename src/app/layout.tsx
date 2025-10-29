@@ -6,8 +6,10 @@ import classNames from 'classnames';
 
 import Header from '@/components/layout/Header/Header';
 import Paper from '@/components/reusables/Paper/Paper';
+import ServiceWorkerLoader from '@/components/reusables/ServiceWorkerLoader/ServiceWorkerLoader';
 
 import '@/styles/global.scss';
+import { constants } from '@/configs';
 import 'react-tooltip/dist/react-tooltip.css';
 import Head from 'next/head';
 
@@ -35,6 +37,7 @@ export default function RootLayout({
       </Head>
       <body className={classNames(onest.className, c)}>
         <Header />
+        <ServiceWorkerLoader swFilePath={`/sw.js?apiUrl=${encodeURIComponent(constants.apiUrl)}`}/>
         <Paper>{children}</Paper>
         <Toaster position="top-left" />
       </body>

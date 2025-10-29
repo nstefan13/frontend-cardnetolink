@@ -258,27 +258,7 @@ function PlaceAutocomplete({ onPlaceSelect, fields, inputRef }: PlaceAutcomplete
 }
 
 export default function ({ ...props }: PlaceAutcompleteProps) {
-    const originalOpen = XMLHttpRequest.prototype.open;
-    const originalAppend = HTMLElement.prototype.append;
-
-    (XMLHttpRequest.prototype as any).open = function(method: any, url: any, ...args: any) {
-        if (url.includes('googleapis.com')) {
-        console.log("INTERCEPT FETCH", url);
-        }
-        return originalOpen.apply(this, arguments as any);
-    };
-    (HTMLElement.prototype as any).append = function(...args: any) {
-        for (const arg of args) {
-            if (arg && arg.src && arg.tagName === "SCRIPT") {
-                if (arg.src.includes('googleapis.com')) {
-                    console.log("INTERCEPTED SCRIPT", arg.src);
-                }
-            }
-        }
-        return originalAppend.call(this, ...args);
-    }
-
-    return <GoogleMapsApiProvider apiKey={'AIzaSyCAnKLuvG7GHZt3bfrElzosAQJLYGHo6JU'} version='beta' region='MD'>
+    return <GoogleMapsApiProvider apiKey={'BOGUS_KEY'} version='beta' region='MD'>
         <PlaceAutocomplete {...props as any} />
     </GoogleMapsApiProvider>
 };

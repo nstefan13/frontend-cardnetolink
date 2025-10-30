@@ -6,7 +6,7 @@ import Image from 'next/image';
 
 import Input from '@/components/reusables/Input/Input';
 import Button from '@/components/reusables/Button/Button';
-import GeneratePasswordIcon from 'public/svgs/rotate-ccw-key.svg';
+import PasswordInput from '@/components/reusables/PasswordInput/PasswordInput';
 
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -71,21 +71,15 @@ export default function Register() {
           fullWidth
           variant="outlined"
         />
-        <div style={{ display: "flex", gap: "8px" }}>
-          <Input
-            id="password"
-            type="password"
-            label="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            fullWidth
-            variant="outlined"
-            autoComplete='new-password'
-          />
-          <Button className={styles[`${c}-form-generate-password-btn`]} onClick={() => handleGeneratePassword()} variant='plain'>
-            <Image color='red' src={GeneratePasswordIcon} alt="Generate Password"/>
-          </Button>
-        </div>
+        <PasswordInput
+          id="password"
+          value={password}
+          onChange={(value) => setPassword(value)}
+          label="Password"
+          fullWidth
+          variant="outlined"
+          autoComplete='off'
+        />
         <div>
           <Button style={{ fontSize: '16px', fontWeight: '400' }} onClick={handleSubmit} fullWidth>
             Create

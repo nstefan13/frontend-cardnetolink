@@ -72,16 +72,6 @@
         color: $error;
       }
     }
-
-    &-generate-password-btn {
-      border-radius: $small-radius;
-      border: solid 1px $neutral-200;
-      padding: $medium-small-spacing;
-
-      &:hover {
-        border-color: $neutral-1000;
-      }
-    }
   }
 
   &-register-link {

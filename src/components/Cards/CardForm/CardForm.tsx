@@ -6,7 +6,6 @@ import { Popover } from 'react-tiny-popover';
 import toast from 'react-hot-toast';
 import classNames from 'classnames';
 import ReactSelect, { StylesConfig } from 'react-select';
-import { useMapsLibrary, APIProvider as GoogleMapsApiProvider } from '@vis.gl/react-google-maps';
 import { titleCase } from 'title-case';
 
 import Textarea from '@/components/reusables/Textarea/Textarea';
